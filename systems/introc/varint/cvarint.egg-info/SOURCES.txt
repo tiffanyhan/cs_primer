@@ -1,0 +1,6 @@
+cvarintmodule.c
+setup.py
+cvarint.egg-info/PKG-INFO
+cvarint.egg-info/SOURCES.txt
+cvarint.egg-info/dependency_links.txt
+cvarint.egg-info/top_level.txt
