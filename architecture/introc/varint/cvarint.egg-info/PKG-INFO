@@ -1,0 +1,4 @@
+Metadata-Version: 2.1
+Name: cvarint
+Version: 1.0.0
+Summary: Varint encoding and decoding in C
