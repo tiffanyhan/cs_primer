@@ -1,17 +1,13 @@
 #include <stdio.h>
+#include <unistd.h>
 
-int *start_addr;
-
-void overflow(int n) {
-    int *curr_addr = &n;
-    int offset = (char*)start_addr - (char*)curr_addr;
-    printf("curr_addr: %p start_addr: %p\n", curr_addr, start_addr);
-    printf("[%d] Address of n: %p; Size: %d bytes\n", n, curr_addr, offset);
-    overflow(n+1);
+void overflow(int n, int *start_addr) {
+    long offset = (long)start_addr - (long)&n;
+    printf("[PID: %d F%d] Address of n: %p; Size: %ld bytes\n", getpid(), n, &n, offset);
+    overflow(n+1, start_addr);
 }
 
 int main(int argc, char *argv[]) {
     int n = 1;
-    start_addr = &n;
-    overflow(n);
+    overflow(n, &n);
 }
