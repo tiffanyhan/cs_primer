@@ -4,6 +4,7 @@
 *.so
 *.bmp
 *.csv
+*.txt
 /build
 /bin
 /dist
