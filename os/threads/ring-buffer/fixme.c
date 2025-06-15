@@ -2,6 +2,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+pthread_mutex_t m;
+pthread_cond_t not_full;
+pthread_cond_t not_empty;
+
 typedef int job;
 
 struct JobQueue {
@@ -28,54 +32,76 @@ void JQ_free(struct JobQueue *jq) {
 }
 
 void JQ_add(struct JobQueue*jq, job item) {
-    // TODO block if size == capacity
+    while (jq->size == jq->capacity) {
+        pthread_cond_wait(&not_full, &m);
+    }
     jq->buffer[jq->wp] = item;
-    printf("%d -> [%d]\n", item, jq->wp);
+    printf("%d -> [%d]      %p\n", item, jq->wp, pthread_self());
     jq->wp = (jq->wp + 1) % jq->capacity;
+    jq->size++;
 }
 
 job JQ_get(struct JobQueue*jq) {
-    // TODO block if size == 0
+    while (jq->size <= 0) {
+        pthread_cond_wait(&not_empty, &m);
+    }
     job item = jq->buffer[jq->rp];
-    printf("     [%d] -> %d\n", jq->rp, item);
+    printf("     [%d] -> %d %p\n", jq->rp, item, pthread_self());
     jq->rp = (jq->rp + 1) % jq->capacity;
+    jq->size--;
     return item;
 }
 
 void *producer(void *arg) {
   struct JobQueue *jq = (struct JobQueue *)arg;
   int i = 0;
-  while (1)
+  while (1) {
+    pthread_mutex_lock(&m);
     JQ_add(jq, i++ % 100);
+    pthread_cond_signal(&not_empty);
+    pthread_mutex_unlock(&m);
+  }
 }
 
 void *consumer(void *arg) {
   struct JobQueue *jq = (struct JobQueue *)arg;
-  while (1)
+  while (1) {
+    pthread_mutex_lock(&m);
     JQ_get(jq);
+    pthread_cond_signal(&not_full);
+    pthread_mutex_unlock(&m);
+  }
 }
 
 int main () {
-  printf("Starting basic test\n");
-  struct JobQueue *jq = JQ_init(8);
-  int i;
-  for (i = 0; i < 5; i++)
-    JQ_add(jq, i);
-  for (i = 0; i < 5; i++)
-    JQ_get(jq);
-  for (i = 0; i < 5; i++)
-    JQ_add(jq, i);
-  for (i = 0; i < 5; i++)
-    JQ_get(jq);
-  JQ_free(jq);
+  // printf("Starting basic test\n");
+  // struct JobQueue *jq = JQ_init(8);
+  // int i;
+  // for (i = 0; i < 5; i++)
+  //   JQ_add(jq, i);
+  // for (i = 0; i < 5; i++)
+  //   JQ_get(jq);
+  // for (i = 0; i < 5; i++)
+  //   JQ_add(jq, i);
+  // for (i = 0; i < 5; i++)
+  //   JQ_get(jq);
+  // JQ_free(jq);
   printf("Starting concurrent test\n");
+
+  pthread_mutex_init(&m, NULL);
+  pthread_cond_init(&not_full, NULL);
+  pthread_cond_init(&not_empty, NULL);
+
   // start n producers, m consumers in threads
   // producer just write incrementing integers to jq indefinitely
   // consumers just read/print them
-  int n = 1;
-  int m = 1;
+  int n = 4;
+  int m = 5;
   pthread_t prod[n], cons[m];
-  jq = JQ_init(4);
+
+  struct JobQueue *jq = JQ_init(4);
+  int i;
+
   for (i = 0; i < n; i++)
     pthread_create(&prod[i], NULL, producer, jq);
   for (i = 0; i < m; i++)
