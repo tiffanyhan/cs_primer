@@ -5,6 +5,7 @@
         "stdio.h": "c",
         "wait.h": "c",
         "string.h": "c",
-        "pthread.h": "c"
+        "pthread.h": "c",
+        "time.h": "c"
     }
 }
