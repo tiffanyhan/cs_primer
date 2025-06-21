@@ -6,6 +6,10 @@
         "wait.h": "c",
         "string.h": "c",
         "pthread.h": "c",
-        "time.h": "c"
+        "time.h": "c",
+        "inet.h": "c",
+        "ringbuffer.h": "c",
+        "dirent.h": "c",
+        "stat.h": "c"
     }
 }
