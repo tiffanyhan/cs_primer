@@ -10,6 +10,7 @@
         "inet.h": "c",
         "ringbuffer.h": "c",
         "dirent.h": "c",
-        "stat.h": "c"
+        "stat.h": "c",
+        "birds.h": "c"
     }
 }

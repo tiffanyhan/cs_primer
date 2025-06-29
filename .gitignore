@@ -4,6 +4,7 @@
 *.so
 *.bmp
 *.csv
+*.tsv
 *.txt
 /build
 /bin
@@ -15,3 +16,5 @@ hello
 actual
 expected
 cases
+mount
+birds
