@@ -11,6 +11,7 @@
         "ringbuffer.h": "c",
         "dirent.h": "c",
         "stat.h": "c",
-        "birds.h": "c"
+        "birds.h": "c",
+        "errno.h": "c"
     }
 }
