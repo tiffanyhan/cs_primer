@@ -8,7 +8,6 @@
 #include <sys/mount.h>
 #include <string.h>
 #include <sys/stat.h>
-#include <sys/syscall.h>
 
 #define STACK_SIZE 65536
 
@@ -22,39 +21,18 @@ int child(void *arg) {
   struct child_config *config = arg;
   char *envp[] = { "PATH=/bin:/usr/bin", NULL };
 
-  // pivot root
-  const char *new_root = "/new_root";
-  const char *put_old = "/new_root/old_root";
+  if (chroot("/new_root") != 0) {
+    printf("chroot error code: %d\n", errno);
+  };
+  chdir("/");
 
-  if (mount(NULL, "/", NULL, MS_REC | MS_PRIVATE, NULL) < 0) {
-    perror("make old root private");
-    exit(EXIT_FAILURE);
+  // break out of chroot jail
+  mkdir ("chroot-dir", 0755);
+  chroot("chroot-dir");
+  for (int i = 0; i < 1000; i++) {
+    chdir("..");
   }
-
-  if (mount(new_root, new_root, NULL, MS_BIND | MS_REC, NULL) < 0) {
-    perror("bind mount new root");
-    exit(EXIT_FAILURE);
-  }
-
-  if (mkdir(put_old, 0755) < 0 && errno != EEXIST) {
-    perror("make dir put_old");
-    exit(EXIT_FAILURE);
-  }
-
-  if (syscall(SYS_pivot_root, new_root, put_old) < 0) {
-    perror("pivot_root");
-    exit(EXIT_FAILURE);
-  }
-
-  if (chdir("/") < 0) {
-    perror("change dir to new root");
-    exit(EXIT_FAILURE);
-  }
-
-  if (umount2("/old_root", MNT_DETACH) < 0) {
-    perror("unmount the old root");
-    exit(EXIT_FAILURE);
-  }
+  chroot(".");
 
   sethostname("mycontainer", strlen("mycontainer"));
 
@@ -83,7 +61,7 @@ int main(int argc, char**argv) {
     exit(1);
   }
 
-  flags = flags | SIGCHLD | CLONE_NEWNET | CLONE_NEWPID | CLONE_NEWIPC | CLONE_NEWUTS | CLONE_NEWNS;
+  flags = flags | SIGCHLD | CLONE_NEWNET | CLONE_NEWPID | CLONE_NEWIPC | CLONE_NEWUTS;
 
   // Clone parent, enter child code
   if ((child_pid = clone(child, stack + STACK_SIZE, flags, &config)) == -1) {
