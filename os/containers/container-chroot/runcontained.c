@@ -58,6 +58,11 @@ int child(void *arg) {
 
   sethostname("mycontainer", strlen("mycontainer"));
 
+  if (mount("proc", "/proc", "proc", 0, NULL) == -1) {
+    perror("mount /proc failed");
+    exit(EXIT_FAILURE);
+  }
+
   if (execvpe(config->argv[0], config->argv, envp)) {
     fprintf(stderr, "execvpe failed %m.\n");
     return -1;
@@ -77,6 +82,7 @@ int main(int argc, char**argv) {
   config.argv = &argv[1];
 
   // Configure cgroup
+  // To test: `sudo ./runc sh -c 'for x in $(seq 10); do sleep 10 & done'`
   mkdir("/sys/fs/cgroup/mycgroup", 0755);
 
   FILE *procs_fp = fopen("/sys/fs/cgroup/mycgroup/cgroup.procs", "w");
@@ -98,6 +104,19 @@ int main(int argc, char**argv) {
     exit(1);
   }
 
+  /* To test network namespace: `sudo ./runc ip a` */
+  /* To test PID namespace: `sudo ./runc ps` */
+  /* To test mount namespace: `sudo ./runc ls /` */
+  /*
+    To test UTS namespace:
+      `sudo hostname myvm && hostname`
+      `sudo ./runc hostname`
+  */
+ /*
+    To test IPC namespace:
+      `ipcmk -Q && ipcs -a`
+      `sudo ./runc ipcs -a`
+ */
   flags = flags | SIGCHLD | CLONE_NEWNET | CLONE_NEWPID | CLONE_NEWIPC | CLONE_NEWUTS | CLONE_NEWNS;
 
   // Clone parent, enter child code
