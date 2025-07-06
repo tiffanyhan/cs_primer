@@ -76,6 +76,21 @@ int main(int argc, char**argv) {
   config.argc = argc - 1;
   config.argv = &argv[1];
 
+  // Configure cgroup
+  mkdir("/sys/fs/cgroup/mycgroup", 0755);
+
+  FILE *procs_fp = fopen("/sys/fs/cgroup/mycgroup/cgroup.procs", "w");
+  if (procs_fp) {
+    fprintf(procs_fp, "%d\n", getpid());
+    fclose(procs_fp);
+  }
+
+  FILE *pids_fp = fopen("/sys/fs/cgroup/mycgroup/pids.max", "w");
+  if (pids_fp) {
+    fprintf(pids_fp, "10\n");
+    fclose(pids_fp);
+  }
+
   // Allocate stack for child
   char *stack = 0;
   if (!(stack = malloc(STACK_SIZE))) {
