@@ -6,6 +6,7 @@
 *.csv
 *.tsv
 *.txt
+*.pyc
 /build
 /bin
 /dist
